@@ -61,24 +61,9 @@ class Textatistic(object):
             'notdalechall_count': self.notdalechall_count,
             'polysyblword_count': self.polysyblword_count
         }
-        
-        self.flesch_score = flesch_score(vars=self.counts)
-        self.fleschkincaid_score = fleschkincaid_score(vars=self.counts)
-        self.gunningfog_score = gunningfog_score(vars=self.counts)
-        self.smog_score = smog_score(vars=self.counts)
-        self.dalechall_score = dalechall_score(vars=self.counts)
-        
-        self.scores = {
-            'flesch_score': self.flesch_score,
-            'fleschkincaid_score': self.fleschkincaid_score,
-            'gunningfog_score': self.gunningfog_score,
-            'smog_score': self.smog_score,
-            'dalechall_score': self.dalechall_score
-        }
     
     def dict(self):
         dict = self.counts.copy()
-        dict.update(self.scores)
         return dict
 
 
@@ -177,83 +162,3 @@ def word_count(text, abbr=Abbreviations(), prepped=False):
     if not prepped:
         text = word_array(text, abbr)
     return len(text)
-
-
-# Calculate readability scores.
-
-def dalechall_score(text=None, abbr=None, easy=None, vars={}):
-    """Calculate Dale-Chall score."""
-    if text:
-        if not abbr:
-            abbr = Abbreviations()
-        if not easy:
-            easy = EasyWords()
-        text = punct_clean(text, abbr)
-        vars['sent_count'] = sent_count(text, abbr, True)
-        text = word_array(text, abbr, True)
-        vars['word_count'] = word_count(text, abbr, True)
-        vars['notdalechall_count'] = notdalechall_count(text, abbr, easy, True)
-    if vars['notdalechall_count'] / vars['word_count'] > 0.05:
-        cons = 3.6365
-    else:
-        cons = 0
-    return cons + 15.79 * (vars['notdalechall_count'] / vars['word_count']) + 0.0496 * (vars['word_count'] / vars['sent_count'])
-
-
-def flesch_score(text=None, abbr=None, hyphen=None, vars={}):
-    """Calculate Flesch Reading Ease score."""
-    if text:
-        if not abbr:
-            abbr = Abbreviations()
-        if not hyphen:
-            hyphen = Hyphenator('en_US')
-        text = punct_clean(text, abbr)
-        vars['sent_count'] = sent_count(text, abbr, True)
-        text = word_array(text, abbr, True)
-        vars['word_count'] = word_count(text, abbr, True)
-        vars['sybl_count'] = sybl_counts(text, abbr, hyphen, True)['sybl_count']
-    return 206.835 - 1.015 * (vars['word_count'] / vars['sent_count']) - 84.6 * (vars['sybl_count'] / vars['word_count'])
-
-
-def fleschkincaid_score(text=None, abbr=None, hyphen=None, vars={}):
-    """Calculate Flesch-Kincaid score."""
-    if text:
-        if not abbr:
-            abbr = Abbreviations()
-        if not hyphen:
-            hyphen = Hyphenator('en_US')
-        text = punct_clean(text, abbr)
-        vars['sent_count'] = sent_count(text, abbr, True)
-        text = word_array(text, abbr, True)
-        vars['word_count'] = word_count(text, abbr, True)
-        vars['sybl_count'] = sybl_counts(text, abbr, hyphen, True)['sybl_count']
-    return - 15.59 + 0.39 * (vars['word_count'] / vars['sent_count']) + 11.8 * (vars['sybl_count'] / vars['word_count'])
-
-
-def gunningfog_score(text=None, abbr=None, hyphen=None, vars={}):
-    """Calculate Gunning Fog score."""
-    if text:
-        if not abbr:
-            abbr = Abbreviations()
-        if not hyphen:
-            hyphen = Hyphenator('en_US')
-        text = punct_clean(text, abbr)
-        vars['sent_count'] = sent_count(text, abbr, True)
-        text = word_array(text, abbr, True)
-        vars['word_count'] = word_count(text, abbr, True)
-        vars['polysyblword_count'] = sybl_counts(text, abbr, hyphen, True)['polysyblword_count']
-    return 0.4 * ((vars['word_count'] / vars['sent_count']) + 100 * (vars['polysyblword_count'] / vars['word_count']))
-
-
-def smog_score(text=None, abbr=None, hyphen=None, vars={}):
-    """Calculate SMOG score."""
-    if text:
-        if not abbr:
-            abbr = Abbreviations()
-        if not hyphen:
-            hyphen = Hyphenator('en_US')
-        text = punct_clean(text, abbr)
-        vars['sent_count'] = sent_count(text, abbr, True)
-        text = word_array(text, abbr, True)
-        vars['polysyblword_count'] = sybl_counts(text, abbr, hyphen, True)['polysyblword_count']
-    return 3.1291 + 1.0430 * sqrt(30 * (vars['polysyblword_count'] / vars['sent_count']))
